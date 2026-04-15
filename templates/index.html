@@ -6,9 +6,9 @@
 <title>Clientes</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #FFFFDE; color: #1e293b; min-height: 100vh; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #FFFFD4; color: #1e293b; min-height: 100vh; }
 
-  header { background: #FF6EAB; color: white; padding: 1.25rem 2rem; display: flex; align-items: center; gap: 1rem; }
+  header { background: #FC77AB; color: white; padding: 1.25rem 2rem; display: flex; align-items: center; gap: 1rem; }
   header h1 { font-size: 1.3rem; font-weight: 700; }
   header p  { font-size: .85rem; opacity: .75; margin-top: 2px; }
   .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #4ade80; margin-left: auto; box-shadow: 0 0 6px #4ade80; }
@@ -16,7 +16,7 @@
   .layout { display: grid; grid-template-columns: 360px 1fr; gap: 1.5rem; max-width: 1300px; margin: 1.5rem auto; padding: 0 1.5rem 3rem; }
 
   .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
-  .card-header { padding: .9rem 1.25rem; border-bottom: 1px solid #FFFFDE; display: flex; align-items: center; justify-content: space-between; }
+  .card-header { padding: .9rem 1.25rem; border-bottom: 1px solid #FFFFD4; display: flex; align-items: center; justify-content: space-between; }
   .card-header h2 { font-size: .95rem; font-weight: 600; }
   .card-body { padding: 1.25rem; }
 
@@ -25,30 +25,30 @@
   .form-group.full { grid-column: span 2; }
   label { display: block; font-size: .78rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .3rem; }
   input[type=text], input[type=email] { width: 100%; padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: .88rem; transition: border-color .15s; outline: none; }
-  input:focus { border-color: #FF6EAB; }
+  input:focus { border-color: #FC77AB; }
 
   .btn { width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; transition: opacity .15s, transform .1s; }
   .btn:active { transform: scale(.98); }
-  .btn-primary { background: #FF6EAB; color: white; }
+  .btn-primary { background: #FC77AB; color: white; }
   .btn-primary:hover { opacity: .9; }
-  .btn-cancel { background: #FFFFDE; color: #64748b; margin-top: .5rem; }
+  .btn-cancel { background: #FFFFD4; color: #64748b; margin-top: .5rem; }
   .btn-cancel:hover { background: #e2e8f0; }
 
   .form-mode { display: inline-block; font-size: .75rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
-  .mode-criar  { background: #FFDEED; color: #FF6EAB; }
+  .mode-criar  { background: #FFFFD4; color: #FC77AB; }
   .mode-editar { background: #fef9c3; color: #854d0e; }
 
-  .search-bar { display: flex; gap: .5rem; padding: 1rem 1.25rem; border-bottom: 1px solid #FFFFDE; }
+  .search-bar { display: flex; gap: .5rem; padding: 1rem 1.25rem; border-bottom: 1px solid #FFFFD4; }
   .search-bar input { flex: 1; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: .88rem; outline: none; }
-  .search-bar input:focus { border-color: #FF6EAB; }
-  .btn-search { padding: 8px 16px; background: #FF6EAB; color: white; border: none; border-radius: 8px; font-size: .85rem; cursor: pointer; }
-  .btn-clear  { padding: 8px 12px; background: #FFFFDE; color: #64748b; border: none; border-radius: 8px; font-size: .85rem; cursor: pointer; }
+  .search-bar input:focus { border-color: #FC77AB; }
+  .btn-search { padding: 8px 16px; background: #FC77AB; color: white; border: none; border-radius: 8px; font-size: .85rem; cursor: pointer; }
+  .btn-clear  { padding: 8px 12px; background: #FFFFD4; color: #64748b; border: none; border-radius: 8px; font-size: .85rem; cursor: pointer; }
 
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: .85rem; }
   thead tr { background: #f8fafc; }
   th { text-align: left; padding: .65rem 1rem; font-size: .72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid #e2e8f0; }
-  td { padding: .75rem 1rem; border-bottom: 1px solid #FFFFDE; color: #334155; }
+  td { padding: .75rem 1rem; border-bottom: 1px solid #FFFFD4; color: #334155; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: #f8fafc; }
 
@@ -59,7 +59,7 @@
   .btn-del:hover { background: #fca5a5; }
 
   .empty { text-align: center; padding: 3rem; color: #94a3b8; font-size: .9rem; }
-  .count-badge { background: #FFDEED; color: #FF6EAB; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .count-badge { background: #FFFFD4; color: #FC77AB; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
 
   #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; padding: .75rem 1.25rem; border-radius: 10px; font-size: .88rem; font-weight: 600; color: white; opacity: 0; transition: opacity .3s; z-index: 999; pointer-events: none; }
   #toast.show { opacity: 1; }
@@ -157,7 +157,7 @@
 <div id="toast"></div>
 
 <script>
-const API = 'http://127.0.0.1:5000';
+const API = '';
 
 function toast(msg, tipo = 'success') {
   const t = document.getElementById('toast');
