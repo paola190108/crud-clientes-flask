@@ -1,6 +1,7 @@
-import sqlite3
+import psycopg2
+import os
 from flask import Flask, request, jsonify, render_template
-from crud import (
+from crud.usuarios import (
     criar_tabela, criar_usuario, listar_usuarios,
     buscar_por_id, buscar_por_nome, buscar_por_email,
     atualizar_usuario, deletar_usuario,
@@ -8,8 +9,12 @@ from crud import (
 
 app = Flask(__name__)
 
-with app.app_context():
-    criar_tabela()
+# Tenta criar a tabela ao iniciar a aplicação
+try:
+    with app.app_context():
+        criar_tabela()
+except Exception as e:
+    print(f"Aguardando banco de dados... Erro: {e}")
 
 def ok(data=None, status=200, msg=None):
     body = {"status": "ok"}
@@ -31,58 +36,48 @@ def get_usuarios():
 @app.get("/usuarios/buscar/nome")
 def get_buscar_nome():
     q = request.args.get("q", "").strip()
-    if not q: return erro("Informe o parâmetro ?q=nome")
+    if not q: return erro("Informe o nome.")
     return ok(buscar_por_nome(q))
 
 @app.get("/usuarios/buscar/email")
 def get_buscar_email():
     q = request.args.get("q", "").strip()
-    if not q: return erro("Informe o parâmetro ?q=email")
+    if not q: return erro("Informe o email.")
     usuario = buscar_por_email(q)
-    if not usuario: return erro("Cliente não encontrado.", 404)
-    return ok(usuario)
+    return ok(usuario) if usuario else erro("Não encontrado.", 404)
 
 @app.get("/usuarios/<int:usuario_id>")
 def get_usuario(usuario_id):
     usuario = buscar_por_id(usuario_id)
-    if not usuario: return erro("Cliente não encontrado.", 404)
-    return ok(usuario)
+    return ok(usuario) if usuario else erro("Não encontrado.", 404)
 
 @app.post("/usuarios")
 def post_usuario():
-    body = request.get_json(silent=True)
-    if not body: return erro("Body JSON obrigatório.")
-    nome     = body.get("nome", "").strip()
-    email    = body.get("email", "").strip()
-    if not nome:  return erro("Campo 'nome' é obrigatório.")
-    if not email: return erro("Campo 'email' é obrigatório.")
+    body = request.get_json(silent=True) or {}
+    nome, email = body.get("nome", "").strip(), body.get("email", "").strip()
+    if not nome or not email: return erro("Nome e Email são obrigatórios.")
     try:
-        novo_id = criar_usuario(nome, email,
-            body.get("telefone"), body.get("cidade"),
-            body.get("empresa"),  body.get("cpf_cnpj"))
-        return ok({"id": novo_id}, status=201, msg="Cliente criado.")
-    except sqlite3.IntegrityError:
-        return erro("E-mail ou CPF/CNPJ já cadastrado.", 409)
+        novo_id = criar_usuario(nome, email, body.get("telefone"), 
+                                body.get("cidade"), body.get("empresa"), body.get("cpf_cnpj"))
+        return ok({"id": novo_id}, 201, "Criado com sucesso.")
+    except psycopg2.IntegrityError:
+        return erro("Email ou CPF/CNPJ já cadastrado.", 409)
 
 @app.put("/usuarios/<int:usuario_id>")
 def put_usuario(usuario_id):
-    body = request.get_json(silent=True)
-    if not body: return erro("Body JSON obrigatório.")
+    body = request.get_json(silent=True) or {}
     try:
-        atualizado = atualizar_usuario(usuario_id,
-            nome=body.get("nome"), email=body.get("email"),
-            telefone=body.get("telefone"), cidade=body.get("cidade"),
-            empresa=body.get("empresa"), cpf_cnpj=body.get("cpf_cnpj"))
-    except sqlite3.IntegrityError:
-        return erro("E-mail ou CPF/CNPJ já pertence a outro cliente.", 409)
-    if not atualizado: return erro("Cliente não encontrado.", 404)
-    return ok(msg="Cliente atualizado.")
+        sucesso = atualizar_usuario(usuario_id, nome=body.get("nome"), email=body.get("email"),
+                                    telefone=body.get("telefone"), cidade=body.get("cidade"),
+                                    empresa=body.get("empresa"), cpf_cnpj=body.get("cpf_cnpj"))
+        return ok(msg="Atualizado.") if sucesso else erro("Não encontrado.", 404)
+    except psycopg2.IntegrityError:
+        return erro("Dados conflitantes com outro usuário.", 409)
 
 @app.delete("/usuarios/<int:usuario_id>")
 def delete_usuario(usuario_id):
-    deletado = deletar_usuario(usuario_id)
-    if not deletado: return erro("Cliente não encontrado.", 404)
-    return ok(msg="Cliente deletado.")
+    return ok(msg="Deletado.") if deletar_usuario(usuario_id) else erro("Não encontrado.", 404)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

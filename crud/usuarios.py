@@ -1,72 +1,85 @@
-"""
-usuarios.py — Operações CRUD para a tabela de clientes
-"""
-
-from .database import get_conn
-
+from .database import get_connection
 
 def criar_usuario(nome, email, telefone=None, cidade=None, empresa=None, cpf_cnpj=None):
-    sql = """
-        INSERT INTO usuarios (nome, email, telefone, cidade, empresa, cpf_cnpj)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """
-    with get_conn() as conn:
-        cursor = conn.execute(sql, (nome, email, telefone, cidade, empresa, cpf_cnpj))
-        return cursor.lastrowid
-
+    conn = get_connection()
+    cursor = conn.cursor()
+    sql = """INSERT INTO usuarios (nome, email, telefone, cidade, empresa, cpf_cnpj) 
+             VALUES (%s, %s, %s, %s, %s, %s) RETURNING id"""
+    cursor.execute(sql, (nome, email, telefone, cidade, empresa, cpf_cnpj))
+    novo_id = cursor.fetchone()[0]
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return novo_id
 
 def listar_usuarios():
-    with get_conn() as conn:
-        rows = conn.execute("SELECT * FROM usuarios ORDER BY id").fetchall()
-    return [dict(r) for r in rows]
-
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nome, email, telefone, cidade, empresa, cpf_cnpj FROM usuarios ORDER BY id DESC")
+    colunas = [desc[0] for desc in cursor.description]
+    usuarios = [dict(zip(colunas, row)) for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return usuarios
 
 def buscar_por_id(usuario_id):
-    with get_conn() as conn:
-        row = conn.execute(
-            "SELECT * FROM usuarios WHERE id = ?", (usuario_id,)
-        ).fetchone()
-    return dict(row) if row else None
-
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nome, email, telefone, cidade, empresa, cpf_cnpj FROM usuarios WHERE id = %s", (usuario_id,))
+    row = cursor.fetchone()
+    usuario = None
+    if row:
+        colunas = [desc[0] for desc in cursor.description]
+        usuario = dict(zip(colunas, row))
+    cursor.close()
+    conn.close()
+    return usuario
 
 def buscar_por_nome(nome):
-    with get_conn() as conn:
-        rows = conn.execute(
-            "SELECT * FROM usuarios WHERE nome LIKE ? ORDER BY nome",
-            (f"%{nome}%",)
-        ).fetchall()
-    return [dict(r) for r in rows]
-
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nome, email, telefone, cidade, empresa, cpf_cnpj FROM usuarios WHERE nome ILIKE %s", (f'%{nome}%',))
+    colunas = [desc[0] for desc in cursor.description]
+    usuarios = [dict(zip(colunas, row)) for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return usuarios
 
 def buscar_por_email(email):
-    with get_conn() as conn:
-        row = conn.execute(
-            "SELECT * FROM usuarios WHERE email = ?", (email,)
-        ).fetchone()
-    return dict(row) if row else None
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nome, email, telefone, cidade, empresa, cpf_cnpj FROM usuarios WHERE email = %s", (email,))
+    row = cursor.fetchone()
+    usuario = None
+    if row:
+        colunas = [desc[0] for desc in cursor.description]
+        usuario = dict(zip(colunas, row))
+    cursor.close()
+    conn.close()
+    return usuario
 
-
-def atualizar_usuario(usuario_id, nome=None, email=None, telefone=None,
-                      cidade=None, empresa=None, cpf_cnpj=None):
-    campos, valores = [], []
-    if nome     is not None: campos.append("nome = ?");     valores.append(nome)
-    if email    is not None: campos.append("email = ?");    valores.append(email)
-    if telefone is not None: campos.append("telefone = ?"); valores.append(telefone)
-    if cidade   is not None: campos.append("cidade = ?");   valores.append(cidade)
-    if empresa  is not None: campos.append("empresa = ?");  valores.append(empresa)
-    if cpf_cnpj is not None: campos.append("cpf_cnpj = ?"); valores.append(cpf_cnpj)
-    if not campos:
-        return False
+def atualizar_usuario(usuario_id, **kwargs):
+    conn = get_connection()
+    cursor = conn.cursor()
+    # Filtra apenas campos que não são None para atualizar
+    campos = [f"{k} = %s" for k, v in kwargs.items() if v is not None]
+    valores = [v for v in kwargs.values() if v is not None]
+    if not campos: return False
     valores.append(usuario_id)
-    sql = f"UPDATE usuarios SET {', '.join(campos)} WHERE id = ?"
-    with get_conn() as conn:
-        cursor = conn.execute(sql, valores)
-    return cursor.rowcount > 0
-
+    sql = f"UPDATE usuarios SET {', '.join(campos)} WHERE id = %s"
+    cursor.execute(sql, valores)
+    linhas = cursor.rowcount
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return linhas > 0
 
 def deletar_usuario(usuario_id):
-    with get_conn() as conn:
-        cursor = conn.execute(
-            "DELETE FROM usuarios WHERE id = ?", (usuario_id,)
-        )
-    return cursor.rowcount > 0
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM usuarios WHERE id = %s", (usuario_id,))
+    linhas = cursor.rowcount
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return linhas > 0
