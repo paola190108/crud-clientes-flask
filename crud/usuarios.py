@@ -1,85 +1,70 @@
+import os
 from .database import get_connection
+
+def get_placeholder():
+    return "%s" if os.environ.get("DATABASE_URL") else "?"
 
 def criar_usuario(nome, email, telefone=None, cidade=None, empresa=None, cpf_cnpj=None):
     conn = get_connection()
     cursor = conn.cursor()
-    sql = """INSERT INTO usuarios (nome, email, telefone, cidade, empresa, cpf_cnpj) 
-             VALUES (%s, %s, %s, %s, %s, %s) RETURNING id"""
+    p = get_placeholder()
+    sql = f"INSERT INTO usuarios (nome, email, telefone, cidade, empresa, cpf_cnpj) VALUES ({p}, {p}, {p}, {p}, {p}, {p})"
     cursor.execute(sql, (nome, email, telefone, cidade, empresa, cpf_cnpj))
-    novo_id = cursor.fetchone()[0]
     conn.commit()
     cursor.close()
     conn.close()
-    return novo_id
+    return True
 
 def listar_usuarios():
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id, nome, email, telefone, cidade, empresa, cpf_cnpj FROM usuarios ORDER BY id DESC")
-    colunas = [desc[0] for desc in cursor.description]
-    usuarios = [dict(zip(colunas, row)) for row in cursor.fetchall()]
+    usuarios = []
+    for row in cursor.fetchall():
+        usuarios.append({
+            "id": row[0], "nome": row[1], "email": row[2],
+            "telefone": row[3], "cidade": row[4], "empresa": row[5], "cpf_cnpj": row[6]
+        })
     cursor.close()
     conn.close()
     return usuarios
-
-def buscar_por_id(usuario_id):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nome, email, telefone, cidade, empresa, cpf_cnpj FROM usuarios WHERE id = %s", (usuario_id,))
-    row = cursor.fetchone()
-    usuario = None
-    if row:
-        colunas = [desc[0] for desc in cursor.description]
-        usuario = dict(zip(colunas, row))
-    cursor.close()
-    conn.close()
-    return usuario
 
 def buscar_por_nome(nome):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, nome, email, telefone, cidade, empresa, cpf_cnpj FROM usuarios WHERE nome ILIKE %s", (f'%{nome}%',))
-    colunas = [desc[0] for desc in cursor.description]
-    usuarios = [dict(zip(colunas, row)) for row in cursor.fetchall()]
+    p = get_placeholder()
+    op = "ILIKE" if os.environ.get("DATABASE_URL") else "LIKE"
+    cursor.execute(f"SELECT id, nome, email, telefone, cidade, empresa, cpf_cnpj FROM usuarios WHERE nome {op} {p}", (f"%{nome}%",))
+    usuarios = []
+    for row in cursor.fetchall():
+        usuarios.append({
+            "id": row[0], "nome": row[1], "email": row[2],
+            "telefone": row[3], "cidade": row[4], "empresa": row[5], "cpf_cnpj": row[6]
+        })
     cursor.close()
     conn.close()
     return usuarios
 
-def buscar_por_email(email):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nome, email, telefone, cidade, empresa, cpf_cnpj FROM usuarios WHERE email = %s", (email,))
-    row = cursor.fetchone()
-    usuario = None
-    if row:
-        colunas = [desc[0] for desc in cursor.description]
-        usuario = dict(zip(colunas, row))
-    cursor.close()
-    conn.close()
-    return usuario
-
 def atualizar_usuario(usuario_id, **kwargs):
     conn = get_connection()
     cursor = conn.cursor()
-    # Filtra apenas campos que não são None para atualizar
-    campos = [f"{k} = %s" for k, v in kwargs.items() if v is not None]
+    p = get_placeholder()
+    campos = [f"{k} = {p}" for k, v in kwargs.items() if v is not None]
     valores = [v for v in kwargs.values() if v is not None]
-    if not campos: return False
     valores.append(usuario_id)
-    sql = f"UPDATE usuarios SET {', '.join(campos)} WHERE id = %s"
+    sql = f"UPDATE usuarios SET {', '.join(campos)} WHERE id = {p}"
     cursor.execute(sql, valores)
-    linhas = cursor.rowcount
     conn.commit()
     cursor.close()
     conn.close()
-    return linhas > 0
+    return True
 
 def deletar_usuario(usuario_id):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM usuarios WHERE id = %s", (usuario_id,))
-    linhas = cursor.rowcount
+    p = get_placeholder()
+    cursor.execute(f"DELETE FROM usuarios WHERE id = {p}", (usuario_id,))
     conn.commit()
     cursor.close()
     conn.close()
-    return linhas > 0
+    return True
