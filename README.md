@@ -21,7 +21,7 @@ Neste projeto, desenvolvi uma aplicação Full Stack integrando **Python (Flask)
 ### Como executar:
 **Clone o repositório:**
     ```bash
-    git clone [https://github.com/paola190108/crud-clientes-flask)
+    git clone https://github.com/paola190108/crud-clientes-flask
     ```
 
 2.  **Instale as dependências:**
